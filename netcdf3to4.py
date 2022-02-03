@@ -37,7 +37,6 @@ def netcdf3to4_parallel(fname):
         glbl_attrs = data.attrs #preserve attributes
         # save memory by writing one variable at the time
         variables = list(set(list(data.variables))-set(list(data.coords))-set(list(data.dims)))
-        c=0
         for v,var in enumerate(variables):
             # rechunk if the dims is large than 1.
             # here we split each dimension by 5, but that could be tuned
@@ -51,16 +50,21 @@ def netcdf3to4_parallel(fname):
             else:
                 newshape = varshape
                 new_encoding = {var: {'complevel': 5, 'shuffle': True, 'zlib': True,'contiguous':False}}
-            if c==0:
+            if v==0:
                 data0=data[var].to_dataset()
                 data0.attrs=glbl_attrs # write attributes
-                data0.to_netcdf(fname+'_tmp',mode='w',format='NETCDF4',encoding=new_encoding)
+                if 'time' in data[var].dims:
+                    data0.to_netcdf(fname+'_tmp',mode='w',format='NETCDF4',encoding=new_encoding,unlimited_dims=['time'])
+                else:
+                    data0.to_netcdf(fname+'_tmp',mode='w',format='NETCDF4',encoding=new_encoding)
             else:
                 data1=data[var].to_dataset()
                 #
-                data1.to_netcdf(fname+'_tmp',mode='a',format='NETCDF4',encoding=new_encoding)
+                if 'time' in data[var].dims:
+                    data1.to_netcdf(fname+'_tmp',mode='a',format='NETCDF4',encoding=new_encoding,unlimited_dims=['time'])
+                else:
+                    data1.to_netcdf(fname+'_tmp',mode='a',format='NETCDF4',encoding=new_encoding)
                 #
-            c=c+1
         data.close()
         shutil.move(fname+'_tmp',fname)
     else:
