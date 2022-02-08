@@ -1,4 +1,5 @@
 import xarray as xr
+import numpy as np
 import glob
 import shutil
 from joblib import Parallel, delayed
@@ -16,8 +17,14 @@ def fix_FillValue(fname,FillValue):
     data_encoding={}
     variables = list(set(list(data.variables))-set(list(data.coords))-set(list(data.dims)))
     for var in variables:
-        var_encoding=data[var].encoding
-        var_encoding['_FillValue']=FillValue
+        ve=data[var].encoding
+        var_encoding={}
+        for key in ['complevel','shuffle','zlib','contiguous','chunksizes','original_shape','_FillValue','dtype', 'fletcher32']:
+            if (key in ['FillValue']) and np.isnan(ve[key]):
+                var_encoding['_FillValue']=FillValue
+            elif key in ve.keys()::
+                var_encoding[key]=ve[key]
+        #
         data_encoding[var]=var_encoding
     data.to_netcdf(fname+'_tmp',format='NETCDF4',encoding=data_encoding,unlimited_dims=['time'])
     data.close()
