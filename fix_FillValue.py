@@ -13,8 +13,7 @@ n_jobs = 8
 def fix_FillValue(fname,FillValue):
     """Set time to be unlimited"""
     data = xr.open_dataset(fname,chunks={})
-    data_encoding = data.encoding
-    data_encoding.pop('unlimited_dims', None)
+    data_encoding={}
     variables = list(set(list(data.variables))-set(list(data.coords))-set(list(data.dims)))
     for var in variables:
         var_encoding=data[var].encoding
