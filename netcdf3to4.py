@@ -7,7 +7,8 @@ from joblib import Parallel, delayed
 # PLEASE MODIFY BELOW DEPENDING ON YOUR NEEDS
 # 
 fpath = '/cluster/work/users/anu074/archive/'
-cases = ['N1850frc2NOOBGC_f09_tnx0125v4_test4']
+#cases = ['N1850frc2NOOBGC_f09_tnx0125v4_test4']
+cases = ['N1850frc2_spinup_Eddy2D_KeyCLim']
 # here you can choose which components to convert
 # atm, ocn, and ice are most important for storage
 realms = ['atm','ocn','ice','lnd','rof']
@@ -42,14 +43,22 @@ def netcdf3to4_parallel(fname):
             # here we split each dimension by 5, but that could be tuned
             #print(var)
             varshape = data[var].shape
+            orig_encoding = data[var].encoding
             if len(varshape)>1:
                 newshape = (max(1,round(varshape[0]/5)),)
                 for s in varshape[1:]:
                     newshape=newshape+(max(1,round(s/5)),)
-                new_encoding = {var: {'complevel': 5, 'shuffle': True, 'zlib': True,'contiguous':False,'chunksizes':newshape,'original_shape':varshape}}
+                new_encoding = {var: {'complevel': 5, 'shuffle': True, 'zlib': True,
+                                      'contiguous':False,'chunksizes':newshape,'original_shape':varshape}}
             else:
                 newshape = varshape
-                new_encoding = {var: {'complevel': 5, 'shuffle': True, 'zlib': True,'contiguous':False}}
+                new_encoding = {var: {'complevel': 5, 'shuffle': True, 'zlib': True,
+                                      'contiguous':False}}
+            for ekey in orig_encoding.keys():
+                if ekey in ['_FillValue','dtype','fletcher32']:
+                    new_encoding[var][ekey]=orig_encoding[ekey]
+            if '_FillValue' not in orig_encoding.keys():
+                new_encoding[var]['_FillValue']=None
             if v==0:
                 data0=data[var].to_dataset()
                 data0.attrs=glbl_attrs # write attributes
