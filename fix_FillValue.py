@@ -14,12 +14,13 @@ def fix_FillValue(fname,FillValue):
     """Set time to be unlimited"""
     data = xr.open_dataset(fname,chunks={})
     data_encoding = data.encoding
+    data_encoding.pop('unlimited_dims', None)
     variables = list(set(list(data.variables))-set(list(data.coords))-set(list(data.dims)))
     for var in variables:
         var_encoding=data[var].encoding
         var_encoding['_FillValue']=FillValue
         data_encoding[var]=var_encoding
-    data.to_netcdf(fname+'_tmp',format='NETCDF4',encoding=data_encoding)
+    data.to_netcdf(fname+'_tmp',format='NETCDF4',encoding=data_encoding,unlimited_dims=['time'])
     data.close()
     shutil.move(fname+'_tmp',fname)
 
