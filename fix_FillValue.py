@@ -22,7 +22,7 @@ def fix_FillValue(fname,FillValue):
         for key in ['complevel','shuffle','zlib','contiguous','chunksizes','original_shape','_FillValue','dtype', 'fletcher32']:
             if (key in ['FillValue']) and np.isnan(ve[key]):
                 var_encoding['_FillValue']=FillValue
-            elif key in ve.keys()::
+            elif key in ve.keys():
                 var_encoding[key]=ve[key]
         #
         data_encoding[var]=var_encoding
